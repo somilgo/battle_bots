@@ -43,7 +43,7 @@ class Player (pygame.sprite.Sprite):
     def draw(self):
         self.intify()
         center = self.canvas.get_rect(center=(self.x, self.y))
-        self.canvas = pygame.Surface((self.radius*2,self.radius*2))
+        self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
         pygame.draw.circle(self.canvas, self.color, (self.radius, self.radius), self.radius)
         pygame.draw.rect(self.canvas, BLUE, (self.radius,self.radius-self.gun_width/2,self.gun_length,self.gun_width))
         self.canvas = pygame.transform.rotate(self.canvas, -self.theta)
