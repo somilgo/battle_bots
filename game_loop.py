@@ -1,5 +1,7 @@
 import pygame, sys
 from pygame.locals import *
+from player import Player
+from bullet import Bullet
 import random
 import math
 import time
@@ -26,88 +28,9 @@ BLUE  = (  0,   0, 255, 255)
 (width, height) = (700,700)
 screen = pygame.display.set_mode((width,height))
 
-class Player (pygame.sprite.Sprite):
-    def __init__(self, xPos, yPos, color):
-        # Call the parent class (Sprite) constructor
-        super(Player, self).__init__()
-        self.x = xPos
-        self.y = yPos
-        self.health = 100
-        self.color = color
-        self.theta = 20
-        self.radius = 20
-        self.gun_length = 30
-        self.gun_width = 10
-        self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
-        self.canvas.fill(WHITE)
-        
-    def draw(self):
-        center = self.canvas.get_rect(center=(self.x, self.y))
-        self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
-        pygame.draw.circle(self.canvas, self.color, (self.radius, self.radius), self.radius)
-        pygame.draw.rect(self.canvas, BLUE, (self.radius,self.radius-self.gun_width/2,self.gun_length,self.gun_width))
-        self.canvas = pygame.transform.rotate(self.canvas, -self.theta)
-        screen.blit(self.canvas, center)
-
-    def clamp(self):
-        if self.x < self.radius:
-            self.x = self.radius
-        if self.x > width-self.radius:
-            self.x = width-self.radius
-        if self.y < self.radius:
-            self.y = self.radius
-        if self.y > width-self.radius:
-            self.y = width-self.radius
-
-    def translate(self, forward):
-        print("translate")
-        if forward:
-            self.y += math.sin(math.radians(self.theta)) * 10
-            self.x += math.cos(math.radians(self.theta)) * 10
-        else:
-            self.y -= math.sin(math.radians(self.theta)) * 10
-            self.x -= math.cos(math.radians(self.theta)) * 10 
-        self.clamp()
-        
-    def rotate(self, clockwise):
-        print("rotate")
-        if not clockwise:
-            self.theta += rotate_delta
-        else:
-            self.theta -= rotate_delta
-
-
-    def shoot(self):
-        # shoot out bullet in towards given thet
-        return
-    
-    def update(self):
-        self.draw()
-        
-    def aim(self):
-        return
-
-
-class Bullet(pygame.sprite.Sprite):
-    """ This class represents the bullet . """
-    def __init__(self, theta):
-        # Call the parent class (Sprite) constructor
-        super(Bullet, self).__init__()
-        self.radius = 5
-        self.image = pygame.Surface([10, 10])
-        pygame.draw.circle(self.image, WHITE, (self.radius, self.radius), self.radius)
-        self.theta = theta
-        self.rect = self.image.get_rect()
- 
-    def update(self):
-        """ Move the bullet. """
-        self.rect.y += math.sin(math.radians(self.theta)) * 30
-        self.rect.x += math.cos(math.radians(self.theta)) * 30     
-        
-
-#pygame.display.set_caption('')
-
+#Sprite groups
 players = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 
 #Game initialization
 def init(numPlayers):
@@ -118,14 +41,22 @@ def init(numPlayers):
         y = random.randint(50,650)
         player = Player(x,y,RED)
         players.add(player)
-        player.draw()
+    renderPlayers()
     pygame.display.update()
 
-# This is a list of every sprite. All blocks and the player block as well.
-# all_sprites_list = pygame.sprite.Group()
+def renderPlayers():
+    for player in players:
+        center = player.canvas.get_rect(center=(player.x, player.y))
+        player.canvas = pygame.Surface((player.radius*2 + player.gun_length-player.radius,player.radius*2))
+        pygame.draw.circle(player.canvas, player.color, (player.radius, player.radius), player.radius)
+        pygame.draw.rect(player.canvas, BLUE, (player.radius,player.radius-player.gun_width/2,player.gun_length,player.gun_width))
+        player.canvas = pygame.transform.rotate(player.canvas, - player.theta)
+        screen.blit(player.canvas, center)
 
-# List of each bullet
-bullet_list = pygame.sprite.Group()
+def renderBullets():
+    for bullet in bullets:
+        pygame.draw.circle(screen, WHITE, (bullet.rect.x,bullet.rect.y), bullet.radius)
+
 
 def detectHit(bullet, player):
     return player.x < bullet.rect.x < player.x + player.radius and player.y < bullet.rect.y < player.y + player.radius
@@ -146,14 +77,14 @@ def gameLoop():
                 # Fire a bullet if the user clicks the mouse button
                 last_bullet=time.time()
                 bullet = Bullet(player.theta)
-                
+
                 # Set the bullet so it is where the player is
                 bullet.rect.x = player.x + math.cos(math.radians(player.theta)) * (player.radius + player.gun_length -10)
                 bullet.rect.y = player.y + math.sin(math.radians(player.theta)) * (player.radius + player.gun_length-10)
-                
+
                 # Add the bullet to the lists
-                bullet_list.add(bullet)
-            
+                bullets.add(bullet)
+
             #For testing purposes
             if pressed[K_RIGHT]:
                 player.rotate(False)
@@ -163,21 +94,22 @@ def gameLoop():
                 player.translate(True)
             if pressed[K_DOWN]:
                 player.translate(False)
-            for bullet in bullet_list:
+            for bullet in bullets:
                 # See if bullet hits player
                 if detectHit(bullet, player):
                     print("HIT")
-                    bullet_list.remove(bullet)
+                    bullets.remove(bullet)
 
                 # Remove the bullet if it flies off the screen
                 if bullet.rect.y < -10 or bullet.rect.y > height + 10 or bullet.rect.x < -10 or bullet.rect.x > width + 10:
-                    bullet_list.remove(bullet)
+                    bullets.remove(bullet)
 
         players.update()
-        bullet_list.draw(screen)
-        bullet_list.update()
+        bullets.update()
+        renderPlayers()
+        renderBullets()
         pygame.display.update()
         fpsClock.tick(FPS)
 
-
+#Run game
 gameLoop()
