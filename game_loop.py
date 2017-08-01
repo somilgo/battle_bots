@@ -2,6 +2,7 @@ import pygame, sys
 from pygame.locals import *
 import random
 import math
+import time
 
 pygame.init()
 
@@ -41,7 +42,6 @@ class Player (pygame.sprite.Sprite):
         self.canvas.fill(WHITE)
         
     def draw(self):
-        self.intify()
         center = self.canvas.get_rect(center=(self.x, self.y))
         self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
         pygame.draw.circle(self.canvas, self.color, (self.radius, self.radius), self.radius)
@@ -58,10 +58,6 @@ class Player (pygame.sprite.Sprite):
             self.y = self.radius
         if self.y > width-self.radius:
             self.y = width-self.radius
-
-    def intify(self):
-        self.x=int(self.x)
-        self.y=int(self.y)
 
     def translate(self, forward):
         print("translate")
@@ -99,7 +95,7 @@ class Bullet(pygame.sprite.Sprite):
         super(Bullet, self).__init__()
         self.radius = 5
         self.image = pygame.Surface([10, 10])
-        self.image.fill(WHITE)
+        pygame.draw.circle(self.image, WHITE, (self.radius, self.radius), self.radius)
         self.theta = theta
         self.rect = self.image.get_rect()
  
@@ -136,6 +132,7 @@ def detectHit(bullet, player):
 
 def gameLoop():
     init(1)
+    last_bullet = 0
     while True:
         screen.fill(BLACK)
         pressed = pygame.key.get_pressed()
@@ -145,13 +142,14 @@ def gameLoop():
                     pygame.quit()
                     sys.exit()
                     # if( pygame.key.get_pressed()[pygame.K_UP] != 0 ):
-            if pressed[K_SPACE]:
+            if pressed[K_SPACE] and time.time() - last_bullet > .7:
                 # Fire a bullet if the user clicks the mouse button
+                last_bullet=time.time()
                 bullet = Bullet(player.theta)
                 
                 # Set the bullet so it is where the player is
-                bullet.rect.x = player.x + math.cos(math.radians(player.theta)) * (player.radius + 4)
-                bullet.rect.y = player.y + math.sin(math.radians(player.theta)) * (player.radius + 4)
+                bullet.rect.x = player.x + math.cos(math.radians(player.theta)) * (player.radius + player.gun_length -10)
+                bullet.rect.y = player.y + math.sin(math.radians(player.theta)) * (player.radius + player.gun_length-10)
                 
                 # Add the bullet to the lists
                 bullet_list.add(bullet)
