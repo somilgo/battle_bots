@@ -12,11 +12,6 @@ pygame.init()
 FPS = 35
 fpsClock = pygame.time.Clock()
 
-#angular constant
-rotate_delta = 10
-#translational constant
-translate_delta = 5
-
 #Colors
 BLACK = (  0,   0,   0, 255)
 WHITE = (255, 255, 255, 255)
@@ -34,35 +29,23 @@ bullets = pygame.sprite.Group()
 
 #Game initialization
 def init(numPlayers):
-    screen.fill(BLACK)
     # This is a list of every sprite.
     for i in range(numPlayers):
         x = random.randint(50,650)
         y = random.randint(50,650)
         player = Player(x,y,RED)
         players.add(player)
-    renderPlayers()
-    pygame.display.update()
-
-def renderPlayers():
-    for player in players:
-        center = player.canvas.get_rect(center=(player.x, player.y))
-        player.canvas = pygame.Surface((player.radius*2 + player.gun_length-player.radius,player.radius*2))
-        pygame.draw.circle(player.canvas, player.color, (player.radius, player.radius), player.radius)
-        pygame.draw.rect(player.canvas, BLUE, (player.radius,player.radius-player.gun_width/2,player.gun_length,player.gun_width))
-        player.canvas = pygame.transform.rotate(player.canvas, - player.theta)
-        screen.blit(player.canvas, center)
-
-def renderBullets():
-    for bullet in bullets:
-        pygame.draw.circle(screen, WHITE, (bullet.rect.x,bullet.rect.y), bullet.radius)
-
 
 def detectHit(bullet, player):
     return player.x < bullet.rect.x < player.x + player.radius and player.y < bullet.rect.y < player.y + player.radius
 
 def gameLoop():
     init(1)
+    #Background used when clearing sprites at end of gameloop
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill(BLACK)
+    screen.blit(background, (0,0))
     last_bullet = 0
     while True:
         screen.fill(BLACK)
@@ -97,18 +80,25 @@ def gameLoop():
             for bullet in bullets:
                 # See if bullet hits player
                 if detectHit(bullet, player):
-                    print("HIT")
                     bullets.remove(bullet)
+                    print("HIT")
+                    player.health -= 5;
+                    if (player.health <= 0):
+                        players.remove(player)
 
                 # Remove the bullet if it flies off the screen
                 if bullet.rect.y < -10 or bullet.rect.y > height + 10 or bullet.rect.x < -10 or bullet.rect.x > width + 10:
                     bullets.remove(bullet)
 
+        #CUD (Clear, Update, Display)
+        players.clear(screen,background)
+        bullets.clear(screen,background)
         players.update()
         bullets.update()
-        renderPlayers()
-        renderBullets()
+        players.draw(screen)
+        bullets.draw(screen)
         pygame.display.update()
+
         fpsClock.tick(FPS)
 
 #Run game

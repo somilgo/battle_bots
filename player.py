@@ -21,16 +21,17 @@ class Player (pygame.sprite.Sprite):
         self.radius = 20
         self.gun_length = 30
         self.gun_width = 10
-        self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
-        # self.canvas.fill(WHITE)
+        self.image = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
+        self.rect = self.image.get_rect()
 
-    # def draw(self):
-    #     center = self.canvas.get_rect(center=(self.x, self.y))
-    #     self.canvas = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
-    #     pygame.draw.circle(self.canvas, self.color, (self.radius, self.radius), self.radius)
-    #     pygame.draw.rect(self.canvas, BLUE, (self.radius,self.radius-self.gun_width/2,self.gun_length,self.gun_width))
-    #     self.canvas = pygame.transform.rotate(self.canvas, -self.theta)
-    #     screen.blit(self.canvas, center)
+    def draw(self):
+        center = self.image.get_rect(center=(self.x, self.y))
+        self.image = pygame.Surface((self.radius*2 + self.gun_length-self.radius,self.radius*2))
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        pygame.draw.rect(self.image, (0, 0, 255, 255), (self.radius,self.radius-self.gun_width/2,self.gun_length,self.gun_width))
+        self.image = pygame.transform.rotate(self.image, -self.theta)
+        self.rect.x = center[0]
+        self.rect.y = center[1]
 
     def clamp(self):
         if self.x < self.radius:
@@ -65,7 +66,7 @@ class Player (pygame.sprite.Sprite):
 
     #Does nothing as of now
     def update(self):
-        return
+        self.draw()
 
     def aim(self):
         return
